@@ -164,13 +164,7 @@ This project demonstrates:
 - Add email notifications for breached SLA tickets
 - Integrate with Microsoft Entra ID or Microsoft Graph in a future version
 
-## Interview explanation
 
-A concise way to describe this project:
-
-> I created a Python Service Desk Ticket Manager to simulate how IT incidents can be validated, prioritised and monitored against SLA targets. The application imports tickets from CSV, calculates priority using impact and urgency, identifies SLA breaches and at-risk incidents, generates reports, records application events in a log file, and includes automated unit tests. I structured the project into separate modules to practise maintainable Python development rather than writing everything in one script.
-
-## Disclaimer
 
 This is a learning and portfolio project. It is not intended to replace a production ITSM platform such as ServiceNow, Jira Service Management, Freshservice, or Zendesk.
 
