@@ -1,0 +1,38 @@
+IT SERVICE DESK REPORT
+======================
+Total tickets: 12
+Open tickets: 8
+Resolved tickets: 4
+SLA breached: 1
+SLA at risk: 2
+
+Tickets by priority
+-------------------
+P1: 3
+P2: 4
+P3: 2
+P4: 3
+
+Tickets by category
+-------------------
+Account Access: 3
+Email: 1
+Hardware: 2
+Network: 2
+Security: 2
+Software: 2
+
+Ticket details
+--------------
+INC001 | P2 | MET | Resolved | Account Access | Account locked after multiple failed logins
+INC002 | P1 | AT RISK | Open | Network | Cannot access shared finance drive
+INC003 | P3 | ON TRACK | In Progress | Email | Outlook repeatedly asks for password
+INC004 | P4 | ON TRACK | Open | Hardware | Laptop docking station not detecting monitors
+INC005 | P2 | MET | Resolved | Software | Excel crashes when opening monthly report
+INC006 | P1 | MET | Resolved | Security | Suspicious MFA prompt reported by user
+INC007 | P4 | ON TRACK | Open | Software | Teams microphone not detected
+INC008 | P2 | MET | Resolved | Account Access | Password expired before client meeting
+INC009 | P3 | AT RISK | In Progress | Network | Wi-Fi disconnects every few minutes
+INC010 | P1 | BREACHED | Open | Security | User clicked suspicious email link
+INC011 | P4 | ON TRACK | Open | Hardware | USB headset not recognised
+INC012 | P2 | ON TRACK | In Progress | Account Access | Unable to access payroll application

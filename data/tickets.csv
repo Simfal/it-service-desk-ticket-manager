@@ -1,0 +1,13 @@
+ticket_id,user,department,category,summary,impact,urgency,status,opened_at,resolved_at
+INC001,Sarah Johnson,HR,Account Access,Account locked after multiple failed logins,medium,high,resolved,2026-10-08 08:15,2026-10-08 09:05
+INC002,James Smith,Finance,Network,Cannot access shared finance drive,high,high,open,2026-10-09 05:30,
+INC003,Emma Brown,Sales,Email,Outlook repeatedly asks for password,medium,medium,in progress,2026-10-09 06:30,
+INC004,David Wilson,Operations,Hardware,Laptop docking station not detecting monitors,low,medium,open,2026-10-08 12:00,
+INC005,Maria White,Finance,Software,Excel crashes when opening monthly report,medium,high,resolved,2026-10-07 10:20,2026-10-07 14:10
+INC006,Thomas Green,Management,Security,Suspicious MFA prompt reported by user,high,high,resolved,2026-10-08 11:00,2026-10-08 12:30
+INC007,Olivia Taylor,HR,Software,Teams microphone not detected,low,low,open,2026-10-08 09:45,
+INC008,Daniel Jones,Sales,Account Access,Password expired before client meeting,medium,high,resolved,2026-10-09 07:40,2026-10-09 08:05
+INC009,Sophie Martin,Operations,Network,Wi-Fi disconnects every few minutes,medium,medium,in progress,2026-10-08 13:30,
+INC010,George Clark,Finance,Security,User clicked suspicious email link,high,high,open,2026-10-09 04:00,
+INC011,Emily Hall,Sales,Hardware,USB headset not recognised,low,low,open,2026-10-08 15:00,
+INC012,Lucas King,Management,Account Access,Unable to access payroll application,high,medium,in progress,2026-10-09 03:30,
