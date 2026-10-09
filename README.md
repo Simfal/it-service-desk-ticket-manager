@@ -1,8 +1,6 @@
-
-Python IT Service Desk project that prioritises incidents, monitors SLA status, validates ticket data and produces support reports.
 # IT Service Desk Ticket Manager
 
-A beginner Python project that simulates part of a real IT Service Desk workflow.
+A beginner-friendly but portfolio-ready Python project that simulates part of a real IT Service Desk workflow.
 
 The application reads IT support tickets from CSV, validates the data, calculates ticket priority, identifies SLA risk, produces summary statistics, and exports a management report.
 
@@ -89,7 +87,7 @@ For demonstration purposes, unresolved tickets are marked:
 
 ## How to run
 
-
+Python 3.10+ is recommended.
 
 Clone the repository and move into the project directory:
 
@@ -166,3 +164,16 @@ This project demonstrates:
 - Add email notifications for breached SLA tickets
 - Integrate with Microsoft Entra ID or Microsoft Graph in a future version
 
+## Interview explanation
+
+A concise way to describe this project:
+
+> I created a Python Service Desk Ticket Manager to simulate how IT incidents can be validated, prioritised and monitored against SLA targets. The application imports tickets from CSV, calculates priority using impact and urgency, identifies SLA breaches and at-risk incidents, generates reports, records application events in a log file, and includes automated unit tests. I structured the project into separate modules to practise maintainable Python development rather than writing everything in one script.
+
+## Disclaimer
+
+This is a learning and portfolio project. It is not intended to replace a production ITSM platform such as ServiceNow, Jira Service Management, Freshservice, or Zendesk.
+
+## Uploading to GitHub
+
+A step-by-step upload guide is included in [`docs/github-upload.md`](docs/github-upload.md).

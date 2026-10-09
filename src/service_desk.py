@@ -58,7 +58,8 @@ def sla_status(ticket: Ticket, now: datetime | None = None) -> str:
     priority = calculate_priority(ticket.impact, ticket.urgency)
     target_hours = SLA_HOURS[priority]
 
-    end_time = ticket.resolved_at if ticket.resolved_at else (now or datetime.now())
+    end_time = ticket.resolved_at if ticket.resolved_at else (
+        now or datetime.now())
     age_hours = (end_time - ticket.opened_at).total_seconds() / 3600
 
     if ticket.is_resolved:
@@ -92,7 +93,8 @@ def load_tickets(path: str | Path) -> list[Ticket]:
 
         missing = required.difference(reader.fieldnames or [])
         if missing:
-            raise ValueError(f"CSV is missing required columns: {sorted(missing)}")
+            raise ValueError(
+                f"CSV is missing required columns: {sorted(missing)}")
 
         for row_number, row in enumerate(reader, start=2):
             try:
@@ -167,6 +169,18 @@ def build_report(tickets: Iterable[Ticket], now: datetime | None = None) -> str:
     lines.extend(["", "Tickets by category", "-------------------"])
     for category, count in sorted(summary["categories"].items()):
         lines.append(f"{category}: {count}")
+
+    lines.extend(["", "High priority open tickets",
+                 "--------------------------"])
+
+    for ticket in ticket_list:
+        priority = calculate_priority(ticket.impact, ticket.urgency)
+
+        if priority in {"P1", "P2"} and not ticket.is_resolved:
+            lines.append(
+                f"{ticket.ticket_id} | {priority} | "
+                f"{ticket.category} | {ticket.summary}"
+            )
 
     lines.extend(["", "Ticket details", "--------------"])
     for ticket in sorted(ticket_list, key=lambda item: item.ticket_id):
