@@ -14,6 +14,7 @@ from .models import Ticket
 
 LOGGER = logging.getLogger(__name__)
 
+# Priority is calculated using impact and urgency.
 PRIORITY_MATRIX = {
     ("high", "high"): "P1",
     ("high", "medium"): "P2",
@@ -26,6 +27,7 @@ PRIORITY_MATRIX = {
     ("low", "low"): "P4",
 }
 
+# SLA target times in hours.
 SLA_HOURS = {
     "P1": 4,
     "P2": 8,
@@ -39,45 +41,84 @@ DATE_FORMAT = "%Y-%m-%d %H:%M"
 def parse_datetime(value: str) -> datetime | None:
     """Parse a CSV datetime value. Empty strings become None."""
     value = value.strip()
+
     if not value:
         return None
+
     return datetime.strptime(value, DATE_FORMAT)
 
 
 def calculate_priority(impact: str, urgency: str) -> str:
     """Return P1-P4 using the configured impact/urgency matrix."""
-    key = (impact.strip().lower(), urgency.strip().lower())
+    key = (
+        impact.strip().lower(),
+        urgency.strip().lower(),
+    )
+
     try:
         return PRIORITY_MATRIX[key]
+
     except KeyError as exc:
-        raise ValueError(f"Invalid impact/urgency combination: {key}") from exc
+        raise ValueError(
+            f"Invalid impact/urgency combination: {key}"
+        ) from exc
 
 
-def sla_status(ticket: Ticket, now: datetime | None = None) -> str:
+def sla_status(
+    ticket: Ticket,
+    now: datetime | None = None,
+) -> str:
     """Return ON TRACK, AT RISK, BREACHED or MET for a ticket."""
-    priority = calculate_priority(ticket.impact, ticket.urgency)
+
+    priority = calculate_priority(
+        ticket.impact,
+        ticket.urgency,
+    )
+
     target_hours = SLA_HOURS[priority]
 
-    end_time = ticket.resolved_at if ticket.resolved_at else (
-        now or datetime.now())
-    age_hours = (end_time - ticket.opened_at).total_seconds() / 3600
+    end_time = (
+        ticket.resolved_at
+        if ticket.resolved_at
+        else (now or datetime.now())
+    )
+
+    age_hours = (
+        end_time - ticket.opened_at
+    ).total_seconds() / 3600
 
     if ticket.is_resolved:
-        return "MET" if age_hours <= target_hours else "BREACHED"
+        if age_hours <= target_hours:
+            return "MET"
+
+        return "BREACHED"
+
     if age_hours > target_hours:
         return "BREACHED"
+
     if age_hours >= target_hours * 0.75:
         return "AT RISK"
+
     return "ON TRACK"
 
 
-def load_tickets(path: str | Path) -> list[Ticket]:
+def load_tickets(
+    path: str | Path,
+) -> list[Ticket]:
     """Load and validate tickets from a CSV file."""
+
     csv_path = Path(path)
+
     tickets: list[Ticket] = []
 
-    with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+    with csv_path.open(
+        "r",
+        encoding="utf-8-sig",
+        newline="",
+    ) as handle:
+
         reader = csv.DictReader(handle)
+
         required = {
             "ticket_id",
             "user",
@@ -91,53 +132,114 @@ def load_tickets(path: str | Path) -> list[Ticket]:
             "resolved_at",
         }
 
-        missing = required.difference(reader.fieldnames or [])
+        missing = required.difference(
+            reader.fieldnames or []
+        )
+
         if missing:
             raise ValueError(
-                f"CSV is missing required columns: {sorted(missing)}")
+                "CSV is missing required columns: "
+                f"{sorted(missing)}"
+            )
 
-        for row_number, row in enumerate(reader, start=2):
+        for row_number, row in enumerate(
+            reader,
+            start=2,
+        ):
             try:
-                opened_at = parse_datetime(row["opened_at"])
+                opened_at = parse_datetime(
+                    row["opened_at"]
+                )
+
                 if opened_at is None:
-                    raise ValueError("opened_at cannot be empty")
+                    raise ValueError(
+                        "opened_at cannot be empty"
+                    )
 
                 ticket = Ticket(
                     ticket_id=row["ticket_id"].strip(),
                     user=row["user"].strip(),
-                    department=row["department"].strip(),
+                    department=row[
+                        "department"
+                    ].strip(),
                     category=row["category"].strip(),
                     summary=row["summary"].strip(),
                     impact=row["impact"],
                     urgency=row["urgency"],
                     status=row["status"],
                     opened_at=opened_at,
-                    resolved_at=parse_datetime(row["resolved_at"]),
+                    resolved_at=parse_datetime(
+                        row["resolved_at"]
+                    ),
                 )
-                tickets.append(ticket)
-            except (ValueError, KeyError) as exc:
-                LOGGER.error("Skipping invalid row %s: %s", row_number, exc)
 
-    LOGGER.info("Loaded %s valid tickets from %s", len(tickets), csv_path)
+                tickets.append(ticket)
+
+            except (ValueError, KeyError) as exc:
+                LOGGER.error(
+                    "Skipping invalid row %s: %s",
+                    row_number,
+                    exc,
+                )
+
+    LOGGER.info(
+        "Loaded %s valid tickets from %s",
+        len(tickets),
+        csv_path,
+    )
+
     return tickets
 
 
 def summarise_tickets(
-    tickets: Iterable[Ticket], now: datetime | None = None
+    tickets: Iterable[Ticket],
+    now: datetime | None = None,
 ) -> dict[str, object]:
     """Produce summary statistics for a collection of tickets."""
+
     ticket_list = list(tickets)
+
     priorities = Counter(
-        calculate_priority(ticket.impact, ticket.urgency) for ticket in ticket_list
+        calculate_priority(
+            ticket.impact,
+            ticket.urgency,
+        )
+        for ticket in ticket_list
     )
-    statuses = Counter(ticket.status for ticket in ticket_list)
-    categories = Counter(ticket.category for ticket in ticket_list)
-    sla_states = Counter(sla_status(ticket, now=now) for ticket in ticket_list)
+
+    statuses = Counter(
+        ticket.status
+        for ticket in ticket_list
+    )
+
+    categories = Counter(
+        ticket.category
+        for ticket in ticket_list
+    )
+
+    sla_states = Counter(
+        sla_status(
+            ticket,
+            now=now,
+        )
+        for ticket in ticket_list
+    )
 
     return {
         "total": len(ticket_list),
-        "open": sum(1 for ticket in ticket_list if not ticket.is_resolved),
-        "resolved": sum(1 for ticket in ticket_list if ticket.is_resolved),
+
+        "open": sum(
+            1
+            for ticket in ticket_list
+            if not ticket.is_resolved
+        ),
+
+        "resolved": sum(
+            1
+            for ticket in ticket_list
+            if ticket.is_resolved
+        ),
+
         "priorities": priorities,
         "statuses": statuses,
         "categories": categories,
@@ -145,57 +247,178 @@ def summarise_tickets(
     }
 
 
-def build_report(tickets: Iterable[Ticket], now: datetime | None = None) -> str:
-    """Build a human-readable Service Desk report."""
-    ticket_list = list(tickets)
-    summary = summarise_tickets(ticket_list, now=now)
+def build_report(
+    tickets: Iterable[Ticket],
+    now: datetime | None = None,
+) -> str:
+    """Build a human-readable Service Desk dashboard and report."""
 
+    ticket_list = list(tickets)
+
+    summary = summarise_tickets(
+        ticket_list,
+        now=now,
+    )
+
+    # Count open P1 and P2 incidents.
+    high_priority_open = sum(
+        1
+        for ticket in ticket_list
+        if calculate_priority(
+            ticket.impact,
+            ticket.urgency,
+        )
+        in {"P1", "P2"}
+        and not ticket.is_resolved
+    )
+
+    # Main dashboard.
     lines = [
-        "IT SERVICE DESK REPORT",
-        "======================",
-        f"Total tickets: {summary['total']}",
-        f"Open tickets: {summary['open']}",
-        f"Resolved tickets: {summary['resolved']}",
-        f"SLA breached: {summary['sla_states'].get('BREACHED', 0)}",
-        f"SLA at risk: {summary['sla_states'].get('AT RISK', 0)}",
+        "======================================",
+        "       IT SERVICE DESK DASHBOARD",
+        "======================================",
         "",
-        "Tickets by priority",
-        "-------------------",
+        f"Total Tickets       : {summary['total']}",
+        f"Open Tickets        : {summary['open']}",
+        f"Resolved Tickets    : {summary['resolved']}",
+        f"High Priority Open  : {high_priority_open}",
+        (
+            "SLA Breached        : "
+            f"{summary['sla_states'].get('BREACHED', 0)}"
+        ),
+        (
+            "SLA At Risk         : "
+            f"{summary['sla_states'].get('AT RISK', 0)}"
+        ),
+        "",
+        "Priority Overview",
+        "-----------------",
+        (
+            "P1 Critical         : "
+            f"{summary['priorities'].get('P1', 0)}"
+        ),
+        (
+            "P2 High             : "
+            f"{summary['priorities'].get('P2', 0)}"
+        ),
+        (
+            "P3 Medium           : "
+            f"{summary['priorities'].get('P3', 0)}"
+        ),
+        (
+            "P4 Low              : "
+            f"{summary['priorities'].get('P4', 0)}"
+        ),
     ]
 
-    for priority in ("P1", "P2", "P3", "P4"):
-        lines.append(f"{priority}: {summary['priorities'].get(priority, 0)}")
+    # Category breakdown.
+    lines.extend(
+        [
+            "",
+            "Tickets by category",
+            "-------------------",
+        ]
+    )
 
-    lines.extend(["", "Tickets by category", "-------------------"])
-    for category, count in sorted(summary["categories"].items()):
-        lines.append(f"{category}: {count}")
+    for category, count in sorted(
+        summary["categories"].items()
+    ):
+        lines.append(
+            f"{category}: {count}"
+        )
 
-    lines.extend(["", "High priority open tickets",
-                 "--------------------------"])
+    # High-priority open ticket section.
+    lines.extend(
+        [
+            "",
+            "High priority open tickets",
+            "--------------------------",
+        ]
+    )
 
-    for ticket in ticket_list:
-        priority = calculate_priority(ticket.impact, ticket.urgency)
+    high_priority_found = False
 
-        if priority in {"P1", "P2"} and not ticket.is_resolved:
+    for ticket in sorted(
+        ticket_list,
+        key=lambda item: item.ticket_id,
+    ):
+        priority = calculate_priority(
+            ticket.impact,
+            ticket.urgency,
+        )
+
+        if (
+            priority in {"P1", "P2"}
+            and not ticket.is_resolved
+        ):
+            high_priority_found = True
+
             lines.append(
-                f"{ticket.ticket_id} | {priority} | "
-                f"{ticket.category} | {ticket.summary}"
+                f"{ticket.ticket_id} | "
+                f"{priority} | "
+                f"{ticket.category} | "
+                f"{ticket.summary}"
             )
 
-    lines.extend(["", "Ticket details", "--------------"])
-    for ticket in sorted(ticket_list, key=lambda item: item.ticket_id):
-        priority = calculate_priority(ticket.impact, ticket.urgency)
+    if not high_priority_found:
         lines.append(
-            f"{ticket.ticket_id} | {priority} | {sla_status(ticket, now=now)} | "
-            f"{ticket.status.title()} | {ticket.category} | {ticket.summary}"
+            "No open P1 or P2 tickets."
+        )
+
+    # Detailed ticket list.
+    lines.extend(
+        [
+            "",
+            "Ticket details",
+            "--------------",
+        ]
+    )
+
+    for ticket in sorted(
+        ticket_list,
+        key=lambda item: item.ticket_id,
+    ):
+        priority = calculate_priority(
+            ticket.impact,
+            ticket.urgency,
+        )
+
+        current_sla_status = sla_status(
+            ticket,
+            now=now,
+        )
+
+        lines.append(
+            f"{ticket.ticket_id} | "
+            f"{priority} | "
+            f"{current_sla_status} | "
+            f"{ticket.status.title()} | "
+            f"{ticket.category} | "
+            f"{ticket.summary}"
         )
 
     return "\n".join(lines) + "\n"
 
 
-def save_report(report: str, output_path: str | Path) -> None:
+def save_report(
+    report: str,
+    output_path: str | Path,
+) -> None:
     """Save a report to disk, creating the parent folder if required."""
+
     path = Path(output_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(report, encoding="utf-8")
-    LOGGER.info("Report saved to %s", path)
+
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    path.write_text(
+        report,
+        encoding="utf-8",
+    )
+
+    LOGGER.info(
+        "Report saved to %s",
+        path,
+    )
